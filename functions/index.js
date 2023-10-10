@@ -11,7 +11,7 @@ admin.initializeApp({
 const express = require("express");
 const cors = require("cors");
 const app = express();
-app.use(cors({origin: true}));
+app.use(cors({ origin: true }));
 app.get("/", (req, res) => {
   return res.status(200).send("How is your day going");
 });
@@ -21,17 +21,17 @@ app.post("/api/create", (req, res) => {
   (async () => {
     try {
       await db.collection("userDetails").doc(`/${Date.now()}/`).create(
-          {
-            id: Date.now(),
-            name: req.body.name,
-            mobile: req.body.mobile,
-            address: req.body.address,
-          },
+        {
+          id: Date.now(),
+          name: req.body.name,
+          mobile: req.body.mobile,
+          address: req.body.address,
+        },
       );
-      return res.status(200).send({status: "Succesed", msg: "Data saved"});
+      return res.status(200).send({ status: "Succesed", msg: "Data saved" });
     } catch (error) {
       console.error();
-      return res.status(500).send({status: "Failed", msg: error});
+      return res.status(500).send({ status: "Failed", msg: error });
     }
   })();
 });
@@ -54,10 +54,10 @@ app.get("/api/getAll", (req, res) => {
         });
         return response;
       });
-      return res.status(200).send({status: "Success", msg: response});
+      return res.status(200).send({ status: "Success", msg: response });
     } catch (error) {
       console.error();
-      return res.status(500).send({status: "Failed", msg: error});
+      return res.status(500).send({ status: "Failed", msg: error });
     }
   })();
 });
@@ -68,10 +68,10 @@ app.get("/api/get/:id", (req, res) => {
       const reqDoc = db.collection("userDetails").doc(req.params.id);
       const userDetails = await reqDoc.get();
       const response = userDetails.data();
-      return res.status(200).send({status: "Success", data: response});
+      return res.status(200).send({ status: "Success", data: response });
     } catch (error) {
       console.error();
-      return res.status(500).send({status: "Failed", msg: error});
+      return res.status(500).send({ status: "Failed", msg: error });
     }
   }
   )();
@@ -82,13 +82,13 @@ app.put("/api/update/:id", (req, res) => {
     try {
       const reqDoc = db.collection("userDetails").doc(req.params.id);
       await reqDoc.update(
-          {
-            name: req.body.name,
-            mobile: req.body.mobile,
-            address: req.body.address,
+        {
+          name: req.body.name,
+          mobile: req.body.mobile,
+          address: req.body.address,
           // eslint-disable-next-line comma-dangle
-          });
-      return res.status(200).send({status: "Succesed", msg: " Data Updated"});
+        });
+      return res.status(200).send({ status: "Succesed", msg: " Data Updated" });
     }
 
     catch (error) {
@@ -106,13 +106,57 @@ app.delete("/api/delete/:id", (req, res) => {
       const reqDoc = db.collection("userDetails").doc(req.params.id);
       await reqDoc.delete();
       // eslint-disable-next-line max-len
-      return res.status(200).send({status: "Success", msg: "Delete Successfully"});
+      return res.status(200).send({ status: "Success", msg: "Delete Successfully" });
     } catch (error) {
       console.error();
-      return res.status(500).send({status: "Failed", msg: error});
+      return res.status(500).send({ status: "Failed", msg: error });
     }
   }
   )();
 });
+
+app.post("/api/createfp", (req, res) => {
+  (async () => {
+    try {
+      await db.collection("fingerprintDB").doc(req.body.id).create(
+        {
+          id: req.body.id,
+          name: req.body.name,
+          data: req.body.data,
+        },
+      );
+      return res.status(200).send({ status: "Succesed", msg: "Data saved" });
+    } catch (error) {
+      console.error();
+      return res.status(500).send({ status: "Failed", msg: error });
+    }
+  })();
+});
+
+app.get("/api/getAllfp", (req, res) => {
+  (async () => {
+    try {
+      const query = db.collection("fingerprintDB");
+      const response = [];
+      await query.get().then((data) => {
+        const docs = data.docs;
+        docs.map((doc) => {
+          const selectedItem = {
+            id: doc.data().id,
+            name: doc.data().name,
+            data: doc.data().data,
+          };
+          response.push(selectedItem);
+        });
+        return response;
+      });
+      return res.status(200).send({ status: "Success", msg: response });
+    } catch (error) {
+      console.error();
+      return res.status(500).send({ status: "Failed", msg: error });
+    }
+  })();
+});
+
 
 exports.app = functions.https.onRequest(app);
