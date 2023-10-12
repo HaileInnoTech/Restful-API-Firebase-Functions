@@ -1,9 +1,9 @@
 const functions = require("firebase-functions");
 
+const { Timestamp } = require("firebase-admin/firestore");
 const admin = require("firebase-admin");
 
 const serviceAccount = require("./auth.json");
-
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -12,6 +12,9 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 app.use(cors({ origin: true }));
+
+
+
 app.get("/", (req, res) => {
   return res.status(200).send("How is your day going");
 });
@@ -115,14 +118,26 @@ app.delete("/api/delete/:id", (req, res) => {
   )();
 });
 
-app.post("/api/createfp", (req, res) => {
+
+
+
+
+
+
+
+
+
+
+
+
+app.post("/api/createfp", (req, res) => {     //create new ID
   (async () => {
     try {
       await db.collection("fingerprintDB").doc(req.body.id).create(
         {
           id: req.body.id,
           name: req.body.name,
-          data: req.body.data,
+          date_created: Timestamp.now(),
         },
       );
       return res.status(200).send({ status: "Succesed", msg: "Data saved" });
@@ -133,7 +148,7 @@ app.post("/api/createfp", (req, res) => {
   })();
 });
 
-app.get("/api/getAllfp", (req, res) => {
+app.get("/api/getAllfpid", (req, res) => {      // get all fp ID
   (async () => {
     try {
       const query = db.collection("fingerprintDB");
@@ -144,7 +159,6 @@ app.get("/api/getAllfp", (req, res) => {
           const selectedItem = {
             id: doc.data().id,
             name: doc.data().name,
-            data: doc.data().data,
           };
           response.push(selectedItem);
         });
@@ -157,6 +171,65 @@ app.get("/api/getAllfp", (req, res) => {
     }
   })();
 });
+
+app.post("/api/createAttendence", (req, res) => {     //create new ID
+  (async () => {
+    try {
+      await db.collection("AttencdenceDB").doc().create(
+        {
+          id: req.body.id,
+          name: req.body.name,
+          date: Timestamp.now(),
+        },
+      );
+      return res.status(200).send({ status: "Succesed", msg: "Data saved" });
+    } catch (error) {
+      console.error();
+      return res.status(500).send({ status: "Failed", msg: error });
+    }
+  })();
+});
+app.get("/api/getAllAttendence", (req, res) => {
+  (async () => {
+    try {
+      const query = db.collection("AttencdenceDB");
+      const response = [];
+      await query.get().then((data) => {
+        const docs = data.docs;
+        docs.map((doc) => {
+          const selectedItem = {
+            id: doc.data().id,
+            name: doc.data().name,
+            date: doc.data().date,
+          };
+          response.push(selectedItem);
+        });
+        return response;
+      });
+      return res.status(200).send({ status: "Success", msg: response });
+    } catch (error) {
+      console.error();
+      return res.status(500).send({ status: "Failed", msg: error });
+    }
+  })();
+});
+
+
+app.get("/api/getfingerbyid/:id", (req, res) => {
+  (async () => {
+    try {
+      const reqDoc = db.collection("fingerprintDB").doc(req.params.id);
+      const fingerprintDB = await reqDoc.get();
+      const response = fingerprintDB.data();
+      return res.status(200).send({ status: "Success", data: response });
+    } catch (error) {
+      console.error();
+      return res.status(500).send({ status: "Failed", msg: error });
+    }
+  }
+  )();
+});
+
 
 
 exports.app = functions.https.onRequest(app);
